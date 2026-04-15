@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kage no Shoseki | Shinseina no Akaï</title>
+    
+    <link rel="icon" type="image/png" href="https://imgur.com/kIYSvXM.png">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Noto+Sans+JP:wght@300;700&family=Shojumaru&family=Cormorant+Garamond:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --kido-red: #ff0000;
+            --bg-ultra-dark: #050000;
+            --text-main: #f5f5f5;
+            --transition-fast: all 0.4s ease-out;
+        }
+
+        /* --- PERFORMANCE CORE --- */
+        * { cursor: default; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        html { 
+            scroll-behavior: smooth; 
+            background: var(--bg-ultra-dark);
+        }
+
+        body {
+            background-color: var(--bg-ultra-dark);
+            color: var(--text-main);
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            /* Force le rendu GPU */
+            transform: translateZ(0);
+        }
+
+        /* --- BACKGROUND (SANS CANVAS POUR LA FLUIDITÉ) --- */
+        .background-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(60, 0, 0, 0.3) 0%, transparent 70%),
+                url('https://www.transparenttextures.com/patterns/asfalt-dark.png');
+            background-color: #020000;
+        }
+
+        .vignette {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.9) 100%);
+            z-index: 0; pointer-events: none;
+        }
+
+        /* --- NAVBAR --- */
+        header {
+            position: fixed; width: 100%; padding: 20px 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; transition: var(--transition-fast);
+        }
+        header.scrolled { 
+            background: rgba(0,0,0,0.95); 
+            padding: 10px 50px; 
+            border-bottom: 1px solid var(--kido-red);
+        }
+
+        .logo-top { height: 50px; filter: drop-shadow(0 0 5px var(--kido-red)); }
+        nav ul { display: flex; list-style: none; gap: 30px; }
+        nav ul li a { text-decoration: none; color: #fff; font-family: 'Cinzel'; font-size: 0.8rem; letter-spacing: 3px; opacity: 0.7; transition: 0.3s; }
+        nav ul li a:hover { opacity: 1; color: var(--kido-red); }
+
+        /* --- HERO --- */
+        .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; z-index: 3; }
+        .mist-title { 
+            font-family: 'Shojumaru', cursive; font-size: clamp(2.5rem, 8vw, 5rem); 
+            color: #fff; text-shadow: 0 0 20px var(--kido-red); 
+            margin: 0; text-align: center; 
+        }
+        .hero-subtitle { font-family: 'Cinzel'; color: var(--kido-red); letter-spacing: 10px; font-size: 0.8rem; margin-top: 10px; font-weight: 700; }
+
+        /* --- GRID & CARDS --- */
+        .main-section { position: relative; z-index: 3; padding: 0 10% 100px; }
+        .lore-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+
+        .clickable-card {
+            background: rgba(20, 0, 0, 0.6);
+            border: 1px solid rgba(255, 0, 0, 0.2);
+            padding: 50px 30px; border-radius: 4px;
+            transition: var(--transition-fast);
+            text-align: center;
+            text-decoration: none; color: inherit;
+            display: block;
+        }
+
+        .clickable-card:hover {
+            background: rgba(40, 0, 0, 0.8);
+            transform: translateY(-5px);
+            border-color: var(--kido-red);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .logo-spell-grid { width: 120px; height: 120px; margin-bottom: 20px; border: 1px solid var(--kido-red); border-radius: 50%; padding: 10px; }
+        .clickable-card h3 { font-family: 'Cinzel'; font-size: 1.2rem; color: #fff; margin-bottom: 10px; }
+        .clickable-card p { font-family: 'Cormorant Garamond'; color: #bbb; font-style: italic; font-size: 1.1rem; }
+
+        /* --- MODALES FLUIDES --- */
+        .details-section { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.98); z-index: 3000; 
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.4s ease;
+        }
+        
+        .details-section:target { opacity: 1; visibility: visible; }
+
+        .content-box { 
+            max-width: 800px; width: 90%; background: #080000; 
+            padding: 40px; border: 1px solid var(--kido-red); 
+            position: relative;
+        }
+
+        .story-text {
+            font-family: 'Cormorant Garamond'; color: #ddd;
+            font-size: 1.2rem; line-height: 1.6; text-align: justify;
+            max-height: 60vh; overflow-y: auto;
+            padding-right: 15px; margin: 20px 0;
+            /* Scrollbar interne propre */
+            scrollbar-width: thin;
+            scrollbar-color: var(--kido-red) transparent;
+        }
+
+        .story-text::-webkit-scrollbar { width: 4px; }
+        .story-text::-webkit-scrollbar-thumb { background: var(--kido-red); }
+
+        .btn-close { 
+            display: inline-block; padding: 12px 40px; 
+            border: 1px solid var(--kido-red); color: var(--kido-red); 
+            text-decoration: none; font-family: 'Cinzel'; font-weight: 700;
+            transition: 0.3s;
+        }
+        .btn-close:hover { background: var(--kido-red); color: #fff; }
+
+        .highlight-red { color: var(--kido-red); font-weight: bold; }
+
+        /* --- AUDIO --- */
+        .audio-player { 
+            position: fixed; bottom: 20px; left: 20px; z-index: 2000; 
+            background: rgba(0,0,0,0.8); border: 1px solid var(--kido-red); 
+            padding: 10px 15px; border-radius: 5px; display: flex; align-items: center;
+        }
+        #volume-slider { width: 60px; accent-color: var(--kido-red); margin-left: 10px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="background-container"></div>
+    <div class="vignette"></div>
+
+    <audio id="bg-audio" loop>
+        <source src="https://cdn.discordapp.com/attachments/1109868874427543647/1492534777407082536/Hermits_Gorge.mp3?ex=69e04c14&is=69defa94&hm=def7a27c4862751eb20a6f672b7f054a9dab0308dac4ff0ac8fe9d2f2ece372e&" type="audio/mpeg">
+    </audio>
+
+    <div class="audio-player">
+        <div id="music-toggle" style="cursor:pointer; color:var(--kido-red);"><i class="fas fa-play" id="play-icon"></i></div>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.3">
+    </div>
+
+    <header id="main-header">
+        <img src="https://imgur.com/kIYSvXM.png" alt="Logo" class="logo-top">
+        <nav>
+            <ul>
+                <li><a href="#home">MANUSCRIT</a></li>
+                <li><a href="#lore">ARCHIVES</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="home" class="hero">
+        <h1 class="mist-title" data-aos="fade-up" data-aos-duration="1000">Kage no Shoseki</h1>
+        <div class="hero-subtitle" data-aos="fade-up" data-aos-delay="200">POUVOIR SANGUINAIRE</div>
+    </section>
+
+    <section id="lore" class="main-section">
+        <div class="lore-grid">
+            <a href="#details-creation" class="clickable-card" data-aos="fade-up">
+                <img src="https://imgur.com/dlztfdY.png" class="logo-spell-grid">
+                <h3>L'histoire de sa Création</h3>
+                <p>De Seiji à l'avènement de l'Envoûtement.</p>
+            </a>
+
+            <a href="#details-shoseki" class="clickable-card" data-aos="fade-up" data-aos-delay="100">
+                <img src="https://imgur.com/wburwbn.png" class="logo-spell-grid">
+                <h3>Kage no Shoseki</h3>
+                <p>La brume rouge et le pacte de sang.</p>
+            </a>
+
+            <a href="#details-akai" class="clickable-card" data-aos="fade-up" data-aos-delay="200">
+                <img src="https://imgur.com/lUILPLD.png" class="logo-spell-grid">
+                <h3>Shinseina no Akaï</h3>
+                <p>La forge de Lioto et le rituel sacré.</p>
+            </a>
+        </div>
+    </section>
+
+    <section id="details-creation" class="details-section">
+        <div class="content-box">
+            <h2 style="font-family:'Shojumaru'; color:var(--kido-red); margin:0;">Création</h2>
+            <div class="story-text">
+                Autrefois, la lame portait le nom de <span class="highlight-red">Shinseina no Akaï</span>. Elle était maniée par l’ancienne Lune Inférieure Cinq de la Foudre Noire, Seiji, détenteur de l’Éclair Fulminant. Cet être était à cette époque le frère d’armes le plus proche de Hidan Yusaki.<br><br>
+                Leurs batailles, leurs combats, leurs défaites, mais aussi leurs plus grandes victoires… tout avait été accompli ensemble. Côte à côte. Une symbiose presque parfaite entre la puissance et l’art de la lame, incarnée par deux êtres pourtant totalement différents.<br><br>
+                Avant sa mort, Seiji confia sa lame à Masaki. Mais après un échec cuisant, la lame fut reprise par une Lune démoniaque suivant des desseins bien plus sombres… La corrompre. Effacer toute trace de la Foudre Noire. Hidan décida de jouer avec ce pouvoir sanguinaire contre ses anciens porteurs. Nuit après nuit, leurs regards restaient figés sur cette arme qui se dégradait sous leurs yeux… condamnant peu à peu l’héritage de Seiji à disparaître.<br><br>
+                Peu à peu, la Foudre Noire se dissipa. À sa place, l’âme de l’Envoûtement émergea. Une teinte rouge apparut, opposée à tout ce que la lame avait autrefois incarné. Le nom de Shinseina no Akaï s’effaça lentement… et un nouveau nom se grava : <span class="highlight-red">Kage no Shoseki</span>.
+            </div>
+            <a href="#lore" class="btn-close">RETOUR</a>
+        </div>
+    </section>
+
+    <section id="details-shoseki" class="details-section">
+        <div class="content-box">
+            <h2 style="font-family:'Shojumaru'; color:var(--kido-red); margin:0;">Kage no Shoseki</h2>
+            <div class="story-text">
+                <span class="highlight-red">Kage no Shoseki.</span><br><br>
+                Alors que la lame fut entièrement consumée par l’Envoûtement, Hidan accomplit un acte impensable : il brisa la lame au moment même où l’avènement se termina. Mais alors que la lame était brisée, une brume étrange commença à s’en échapper. De ce voile s’élevèrent des filaments de sang faisant apparaître comme des pétales de fleurs noir et rouge, qui finirent par reformer le morceau manquant.<br><br>
+                À ce moment, Hidan scella une sorte de pacte : seul un être lié à l’Envoûtement pouvait activer le pouvoir enfermé à l’intérieur. Si un être “banal” s’en saisissait, il ne voyait qu’une lame détruite, sans vie. Mais si quelqu’un possédant la puissance de l’Envoûtement prenait la lame… alors l’acier spirituel se reforgerait.<br><br>
+                La lame, reforgée, commença alors à dégager un pouvoir singulier. Une brume rouge s’éleva autour de Hidan, plongeant l’espace dans un noir profond au sein même de ce voile écarlate. La présence de l’intégralité des figures de l’Envoûtement se manifesta, imposant une pression spirituelle écrasante. Des voix résonnèrent, des tremblements parcoururent le sol, et le sang semblait jaillir des yeux et des oreilles de ceux présents.
+            </div>
+            <a href="#lore" class="btn-close">RETOUR</a>
+        </div>
+    </section>
+
+    <section id="details-akai" class="details-section">
+        <div class="content-box">
+            <h2 style="font-family:'Shojumaru'; color:var(--kido-red); margin:0;">Shinseina no Akaï</h2>
+            <div class="story-text">
+                <span class="highlight-red">Shinseina no Akaï.</span><br><br>
+                À l’époque, Shinseina ne portait aucun nom. Elle n’était qu’un simple katana détenu par un samouraï d’un village éloigné, dans les montagnes creuses… Un homme marqué par la solitude et le froid. Mais alors qu’une nuit tombait, un démon aux yeux rouges apparut : <span class="highlight-red">Lioto</span>. Une menace du Berserk.<br><br>
+                Lioto s’empara de force de cette lame inerte et y insuffla son pouvoir, transformant une simple arme en une relique capable de contenir le pouvoir d’autrui. Bien plus tard, Seiji récupéra la lame de Lioto. Il lui fallut plusieurs mois pour en altérer la nature, la transformant en une essence de foudre noire.<br><br>
+                Une nuit, l’orage gronda. Le rituel commença. Des éclairs s’abattaient violemment, détruisant le sol, pourtant la lame résistait. Alors Seiji utilisa une technique personnelle : <span class="highlight-red">Shinseina Hatten</span>. Son corps se renforça brutalement et il déversa une grande quantité de son sang sur la lame. La couleur de l’acier disparut. Son pouvoir sanguinaire enveloppa la lame jusqu’à compression. Puis, au terme du rituel… naquit un noir profond accompagné d’un blanc éclatant, reflet absolu du pouvoir de la foudre noire. Ainsi fut forgée une nouvelle identité : Shinseina no Akaï.
+            </div>
+            <a href="#lore" class="btn-close">RETOUR</a>
+        </div>
+    </section>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // AOS plus rapide pour éviter les saccades au scroll
+        AOS.init({ duration: 600, once: true });
+        
+        // Navigation fluide simple
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            header.classList.toggle('scrolled', window.scrollY > 50);
+        }, { passive: true });
+
+        // Audio Management
+        const audio = document.getElementById('bg-audio');
+        const toggleBtn = document.getElementById('music-toggle');
+        const playIcon = document.getElementById('play-icon');
+        const volumeSlider = document.getElementById('volume-slider');
+
+        toggleBtn.addEventListener('click', () => {
+            if (audio.paused) { 
+                audio.play().catch(() => {}); 
+                playIcon.className = 'fas fa-pause'; 
+            } else { 
+                audio.pause(); 
+                playIcon.className = 'fas fa-play'; 
+            }
+        });
+        volumeSlider.addEventListener('input', (e) => { audio.volume = e.target.value; });
+    </script>
+</body>
+</html>
